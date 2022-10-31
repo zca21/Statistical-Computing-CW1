@@ -1,0 +1,138 @@
+---
+title: "Untitled"
+output: html_document
+date: "2022-10-31"
+---
+
+## Question 1: Wild Life Population Density
+```{r}
+#a
+#Initialising the enviroment
+setwd("~/Desktop/Statistical Computing/CW/Statistical-Computing-CW1")
+eco.df <- read.table("ecoStudy.txt",header = T)
+#Turning habitat variable into factor for later plotting and analysis using it
+eco.df$habitat <- factor(eco.df$habitat,levels=c("A","B","C"),labels=c("A","B","C"))
+attach(eco.df)
+
+#i
+#For these questions I will report my answers to 3 d.p.
+
+min(density)
+#minimum density is 0
+
+#Selecting 1st quantile from the density column of eco-study dataset
+quantile(density)[[2]]
+#1st quantile of density is 1.413 to (3 d.p.)
+
+median(density)
+#Median of density is 2.744 (3 d.p.)
+
+#Selecting 3rd quantile
+quantile(density)[[4]]
+#3rd quantile of density is 4.193 (3 d.p.)
+
+max(density)
+#maximum value of desnity is 20.497 (3 d.p.)
+
+#ii
+table(habitat)
+#For habitat A, B and C there are 100, 125 and 75 observations in each respectively
+```
+
+```{r}
+#b
+#Creating new column in eco-study dataframe
+eco.df$logDensity <- log(density + 1)
+
+#Creating graphic of side by side box plots
+par(mfrow=c(2,1))
+
+boxplot(density~habitat,
+        main="Boxplot of density in each habitat",
+        xlab="Habitat type",
+        ylab="Density",
+        col=c("red","blue","green"))
+
+boxplot(logDensity~habitat,
+        main="Boxplot of log density in each habitat",
+        xlab="Habitat type",
+        ylab="Log density",
+        col=c("red","blue","green"))
+
+#NEED TO SORT OUT SAVING THIS PROPERLY
+```
+```{r}
+#Creating vectors to store the observed densities of each habitat type
+density.A <- density[habitat=="A"]
+density.B <- density[habitat=="B"]
+density.C <- density[habitat=="C"]
+
+#calculating the denominator
+F.stat.denom <- (sum((density.A-mean(density.A))^2)+
+  sum((density.B-mean(density.B))^2)+
+  sum((density.C-mean(density.C))^2))/(300-3)
+
+#calculating the numerator
+F.stat.numerator <- ((100*((mean(density.A)-mean(density))^2))+
+  (125*((mean(density.B)-mean(density))^2))+
+  (75*((mean(density.C)-mean(density))^2)))/2
+
+#Calculating F statistic
+F.stat <- F.stat.numerator/F.stat.denom
+
+#Finding p-value, as pf is probability that x from a RV X~F_{2}{297} is less than F.stat value the probability to be equal or larger is 1-pf
+1-pf(F.stat,2,297)
+
+
+#Using tapply to find the F-stat instead
+
+#First, creating a function to calculate the numerator and denominator values for each habitat type
+F.stat <- function(vec=NULL){
+  
+  numerator<-(length(vec)*(mean(vec)-mean(density))^2)/2
+  denominator<-(sum((vec-mean(vec))^2))/(300-3)
+  
+  #Storing in a list so can extract both values from the function output
+  output <- list("num"=numerator,"den"=denominator)
+  
+  return(list("num"=numerator,"den"=denominator))
+}
+
+#Applying the function to each habitat type separately using the tapply function
+tapply.out.Fstat<-tapply(density,habitat,FUN=F.stat)
+
+#Calculating the F statistic by extracting and summing the numerator and denominator parts of the tapply output
+tapply.F.stat<-sum(c(tapply.out.Fstat$A$num,tapply.out.Fstat$B$num,tapply.out.Fstat$C$num))/
+  sum(c(tapply.out.Fstat$A$den,tapply.out.Fstat$B$den,tapply.out.Fstat$C$den))
+```
+
+```{r}
+#function to calculate the residuals in the ith habitat
+residual.func<- function(x){
+
+  residuals <- x-mean(x)
+  
+  return(residuals)
+}
+
+#Calculating residuals for each list using tapply
+residuals.list <- tapply(density, habitat, residual.func)
+#Extracting residuals values from list and putting into a vector
+residuals<-c(residuals.list$A,residuals.list$B,residuals.list$C)
+
+#Creating QQ plot
+sorted.residuals<-sort(residuals)
+sorted.normal.dist<-sort(rnorm(300))
+
+plot(x=sorted.normal.dist,y=sorted.residuals,
+     xlab="Theoretical quantiles",
+     ylab="Sample quantiles",
+     main="QQ plot of residuals")
+#Adding in reference line
+qqline(residuals, col = "red", lwd = 2)
+
+#Looking at the QQ plot the tails diverge dramatically from the reference line giving evidence that the residuals are not normally distributed.
+```
+
+
+
