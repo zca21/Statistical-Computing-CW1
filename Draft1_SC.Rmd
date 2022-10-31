@@ -44,6 +44,9 @@ table(habitat)
 #Creating new column in eco-study dataframe
 eco.df$logDensity <- log(density + 1)
 
+#Saving plot created below
+pdf(file="Boxplot.pdf")
+
 #Creating graphic of side by side box plots
 par(mfrow=c(2,1))
 
@@ -58,6 +61,8 @@ boxplot(logDensity~habitat,
         xlab="Habitat type",
         ylab="Log density",
         col=c("red","blue","green"))
+
+dev.off()
 
 #NEED TO SORT OUT SAVING THIS PROPERLY
 ```
@@ -134,5 +139,74 @@ qqline(residuals, col = "red", lwd = 2)
 #Looking at the QQ plot the tails diverge dramatically from the reference line giving evidence that the residuals are not normally distributed.
 ```
 
+## Question 2: Mixture Models
+```{r}
+calcLogMix2Gamma <- function(x,alpha,beta,p){
+  
+  #input argument checking
+  if(is.numeric(x)==F){
+    stop("x is not a numeric vector")
+  }else if(length(alpha)!=2 | is.numeric(alpha)==F){
+    stop("alpha needs to a numeric vector of length 2")
+  }else if(length(beta)!=2 | is.numeric(beta)==F){
+    stop("beta needs to a numeric vector of length 2")
+  }else if(is.numeric(p)==F | p>1 | p<0 | length(p)!=1){
+    stop("p must be a single numeric value between 0 and 1 inclusive")
+  }
+  
+  #calculating the pdf for each value of x using the provided formula
+  prob.dist<-p*(x^(alpha[1]-1)*exp(-beta[1]*x)*beta[1]^alpha[1])/gamma(alpha[1])+(1-p)*(x^(alpha[2]-1)*exp(-beta[2]*x)*beta[2]^alpha[2])/gamma(alpha[2])
+  
+  #calculating the log of the joint probability distribution
+  log.like <- log(prod(prob.dist))
+  
+  return(log.like)
+}
 
+
+#Creating objects for the function
+x <- c(0.06, 2.32, 4.81, 0.02, 2.33, 2.18, 0.83, 2.45, 2.10, 3.27)
+alpha <- c(0.5, 6)
+beta <- c(0.5, 2.5)
+p <- 0.35
+
+#Using calcLogMixGamma function with required inputs and rounding to 3 d.p.
+round(calcLogMix2Gamma(x,alpha,beta,p),3)
+```
+
+
+## Question 3: Reimann Integration
+
+```{r}
+smoothCurve <- function(x,alpha,beta,p,q,k){
+  
+  #calculating numerator and denomoinator in log term of g(x) function
+  numerator <- (gamma(x+beta)^k)*(p^alpha)*(q^beta)
+  denominator <- (gamma(alpha)^k)*(gamma(beta)^k)
+  
+  #combining parts of g(x) to calculate g(x) value
+  g <- sin((1/(2*alpha))*log(numerator/denominator))
+
+  return(g)
+}
+
+calcMidRiemannLoop <- function(xVec,alpha,beta,p,q,k){
+  #setting up vector to store areas of each (x_{i-1},x_{i}) segment
+  interval.area<-rep(0,length(xVec)-1)
+  
+  #loop to calculate the area in each interval
+  for (i in 2:length(xVec)){
+    x <- (xVec[i]+xVec[i-1])/2
+    #using equation 6 with absoulte value as area cannot be negative
+    interval.area <- abs((xVec[i]-xVec[i-1])*smoothCurve(x,alpha,beta,p,q,k))
+  }
+  
+  #Calculating total area
+  approx.area <- sum(interval.area)
+  
+  return(approx.area)
+}
+
+
+```
 
