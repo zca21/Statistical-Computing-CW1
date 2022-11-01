@@ -241,6 +241,16 @@ calcMidRiemann <- function(xVec,alpha,beta,p,q,k){
   }else if (length(xVec)==1){
     
     stop("xvec argument must be a vector of 2 or more values")
+  }else if (length(alpha)>1 | is.numeric(alpha)==F | alpha<=0){
+    stop("alpha must be a single positive numeric value")
+  }else if (length(beta)>1 | is.numeric(beta)==F | beta<=0){
+    stop("beta must be a single positive numeric value")
+  }else if (length(p)>1 | is.numeric(p)==F){
+    stop("p must be a single numeric value")
+  }else if (length(k)>1 | is.numeric(k)==F){
+    stop("k must be a single numeric value")
+  }else if (length(q)>1 | is.numeric(q)==F){
+    stop("q must be a single numeric value")
   }
   #checking to see if all values in xVec are larger than the last (strictly increasing)
   ifelse(xVec != sort(xVec),stop("xVec argment must be a strictly increasing vector of values"),NA)
@@ -262,9 +272,12 @@ calcMidRiemann <- function(xVec,alpha,beta,p,q,k){
 #Creating vector of intervals as specified
 xVec <- seq(from=2,to=8,by=0.01)
 
+round(calcMidRiemann(xVec,2.1,0.5,3,6,2),3)
+#The answer for (e) is 4.316 to 3 d.p.
 
+#checking against loop version
 calcMidRiemannLoop(xVec,2.1,0.5,3,6,2)
-calcMidRiemann(xVec,2.1,0.5,3,6,2)
+
 
 plot(xVec,smoothCurve(xVec,2.1,0.5,3,6,2))
 
@@ -277,4 +290,31 @@ plot(xVec,smoothCurve(xVec,2.1,0.5,3,6,2))
 # xVec <- c(2,4,5,-2,1,7)
 # ifelse(xVec != sort(xVec),stop("xVec argment must be a strictly increasing vector of values"),NA)
 ```
+
+
+```{r}
+
+calcMidRiemannAreas <- function(xSeqList,alpha,beta,p,q,k){
+  #Using sapply to apply calcMidRiemann function to each list element and return each calculated area as an element of a vector
+  vector.of.areas <- sapply(xSeqList,calcMidRiemann,alpha=alpha,beta=beta,p=p,q=q,k=k)
+  
+  #Summing areas calculated for each list element to find total area
+  total.area<-sum(vector.of.areas)
+  
+  return(sum(list.of.areas))
+}
+
+#creating list of sequences as defined in (g)
+xSeqList <- list(seq(from=3.5,to=8,by=0.01),seq(from=2,to=4.3,by=0.1),seq(from=1.07,to=9.012,by=0.001))
+
+round(calcMidRiemannAreas(xSeqList,1.9,0.75,2.15,7,1.65),3)
+#Total area is 10.847 to 3 d.p.
+
+#checking answer using calcMidRiemann multiple times
+calcMidRiemann(seq(from=3.5,to=8,by=0.01),1.9,0.75,2.15,7,1.65)+
+  calcMidRiemann(seq(from=2,to=4.3,by=0.1),1.9,0.75,2.15,7,1.65)+
+  calcMidRiemann(seq(from=1.07,to=9.012,by=0.001),1.9,0.75,2.15,7,1.65)
+
+```
+
 
