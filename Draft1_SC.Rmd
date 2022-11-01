@@ -314,7 +314,99 @@ round(calcMidRiemannAreas(xSeqList,1.9,0.75,2.15,7,1.65),3)
 calcMidRiemann(seq(from=3.5,to=8,by=0.01),1.9,0.75,2.15,7,1.65)+
   calcMidRiemann(seq(from=2,to=4.3,by=0.1),1.9,0.75,2.15,7,1.65)+
   calcMidRiemann(seq(from=1.07,to=9.012,by=0.001),1.9,0.75,2.15,7,1.65)
-
 ```
+
+```{r}
+
+weatherSeqProb <- function(weatherSeq,trProbs,initProbs){
+  
+  #Finding the length weather sequence
+  weather.seq.length <- length(weatherSeq)
+  
+  #Finding initial probability of chosen sequence
+  if (weatherSeq[1]=="s"){
+    initial.prob <- initProbs[1]
+  }else if (weatherSeq[1]=="c"){
+    initial.prob <- initProbs[2]
+  }else if (weatherSeq[1]=="r"){
+    initial.prob <- initProbs[3]
+  }
+  #Assigning numeric values to weather sequence letters to be able to call indexes of matrix
+  weatherSeq.numeric <- ifelse(weatherSeq=="s",1,ifelse(weatherSeq=="c",2,3))
+  
+  #Setting up vector to store each transition probability in
+  transition.prob<-rep(0,length(weatherSeq))
+  
+for (i in 2:length(weatherSeq)){
+  #trProbs[i,j] is the probability to go from state i to state j thus i si the last weather state and j is current which has been stored in weatherSeq.numeric
+  transition.prob[i] <- trProbs[weatherSeq.numeric[i-1],weatherSeq.numeric[i]]
+}
+  
+  #Putting initial weather probability into vector
+  transition.prob[1] <- initial.prob
+  
+  #Calculating log total probability
+  total.prob.log <- log(prod(transition.prob))
+  
+  return(total.prob.log)
+}
+
+weatherSeq <- c("c","s","c","r","s","s")
+trProbs <- matrix(c(0.5,0.4,0.1,0.33,0.35,0.32,0.3,0.3,0.4),nrow=3,ncol=3,byrow = T)
+initProbs <- c(0.45,0.25,0.3)
+
+round(weatherSeqProb(weatherSeq,trProbs,initProbs),3)
+#log probability of weather sequence is -6.448 (3 d.p.)
+
+
+
+# #Testing to see code working properly
+# weatherSeq.numeric <- ifelse(weatherSeq=="s",1,ifelse(weatherSeq=="c",2,3))
+#   
+# transtion.prob<-rep(0,length(weatherSeq))
+# for (i in 2:length(weatherSeq)){
+#   transtion.prob[i] <- trProbs[weatherSeq.numeric[i-1],weatherSeq.numeric[i]]
+# }  
+# 
+# trProbs
+```
+
+```{r}
+
+weatherColourProbs <- function(colourSeq,emitProbs,weatherSeq,trProbs,initProbs){
+  
+  #calculate probabilities for weather as before
+  total.weather.prob <- exp(weatherSeqProb(weatherSeq,trProbs,initProbs))
+  
+  weatherSeq.numeric <- ifelse(weatherSeq=="s",1,ifelse(weatherSeq=="c",2,3))
+  colourSeq.numeric <- ifelse(colourSeq=="B",1,2)
+  
+  colour.trans.prob <- rep(0,length(colourSeq))
+  for (i in 1:length(colourSeq)){
+    #Storing prob of selecting the jacket in the ith position sequence for the ith weather condition chosen 
+  colour.trans.prob[i] <- emitProbs[weatherSeq.numeric[i],colourSeq.numeric[i]]  
+  }
+  
+  total.prob <- total.weather.prob*prod(colour.trans.prob)
+  log.total.prob <- log(total.prob)
+  return(log.total.prob)
+}
+
+
+#Setting up objects to input into function
+weatherSeq <- c("r","s","c","r","c","r","s","s")
+colourSeq <- c("B","W","W","B","B","W","W","W")
+initProbs <- c(0.35,0.45,0.2)
+trProbs <- matrix(c(0.55,0.25,0.2,0.25,0.35,0.4,0.2,0.15,0.65),nrow=3,ncol=3,byrow = T)
+emitProbs <- matrix(c(0.2,0.8,0.55,0.45,0.9,0.1),nrow=3,ncol=2,byrow = T)
+
+round(weatherColourProbs(colourSeq,emitProbs,weatherSeq,trProbs,initProbs),3)
+#Answer is -15.121 (3 d.p.)
+
+#Need to make comments and clean up code (indentation)
+#Check that have not repeated code in last function???
+#Change if else to have vector of 1 longer length with new 1st element equal to old 1st element (then for loop would do all of the work)
+```
+
 
 
