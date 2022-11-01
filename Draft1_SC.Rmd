@@ -17,22 +17,22 @@ attach(eco.df)
 #i
 #For these questions I will report my answers to 3 d.p.
 
-min(density)
+round(min(density),3)
 #minimum density is 0
 
 #Selecting 1st quantile from the density column of eco-study dataset
-quantile(density)[[2]]
+round(quantile(density)[[2]],3)
 #1st quantile of density is 1.413 to (3 d.p.)
 
-median(density)
+round(median(density),3)
 #Median of density is 2.744 (3 d.p.)
 
 #Selecting 3rd quantile
-quantile(density)[[4]]
+round(quantile(density)[[4]],3)
 #3rd quantile of density is 4.193 (3 d.p.)
 
-max(density)
-#maximum value of desnity is 20.497 (3 d.p.)
+round(max(density),3)
+#maximum value of density is 20.497 (3 d.p.)
 
 #ii
 table(habitat)
@@ -44,7 +44,7 @@ table(habitat)
 #Creating new column in eco-study dataframe
 eco.df$logDensity <- log(density + 1)
 
-#Saving plot created below
+#Saving plot created below to pdf file called Boxplot.pdf
 pdf(file="Boxplot.pdf")
 
 #Creating graphic of side by side box plots
@@ -72,12 +72,12 @@ density.A <- density[habitat=="A"]
 density.B <- density[habitat=="B"]
 density.C <- density[habitat=="C"]
 
-#calculating the denominator
+#calculating the denominator of F statistic
 F.stat.denom <- (sum((density.A-mean(density.A))^2)+
   sum((density.B-mean(density.B))^2)+
   sum((density.C-mean(density.C))^2))/(300-3)
 
-#calculating the numerator
+#calculating the numerator of F statistic
 F.stat.numerator <- ((100*((mean(density.A)-mean(density))^2))+
   (125*((mean(density.B)-mean(density))^2))+
   (75*((mean(density.C)-mean(density))^2)))/2
@@ -120,7 +120,7 @@ residual.func<- function(x){
   return(residuals)
 }
 
-#Calculating residuals for each list using tapply
+#Calculating residuals for each habitat using tapply
 residuals.list <- tapply(density, habitat, residual.func)
 #Extracting residuals values from list and putting into a vector
 residuals<-c(residuals.list$A,residuals.list$B,residuals.list$C)
@@ -158,9 +158,9 @@ calcLogMix2Gamma <- function(x,alpha,beta,p){
   prob.dist<-p*(x^(alpha[1]-1)*exp(-beta[1]*x)*beta[1]^alpha[1])/gamma(alpha[1])+(1-p)*(x^(alpha[2]-1)*exp(-beta[2]*x)*beta[2]^alpha[2])/gamma(alpha[2])
   
   #calculating the log of the joint probability distribution
-  log.like <- log(prod(prob.dist))
+  log.prob.dist <- log(prob.dist)
   
-  return(log.like)
+  return(log.prob.dist)
 }
 
 
@@ -172,15 +172,35 @@ p <- 0.35
 
 #Using calcLogMixGamma function with required inputs and rounding to 3 d.p.
 round(calcLogMix2Gamma(x,alpha,beta,p),3)
+
+#The answer of the log joint pdf of each inputted x value is -0.592 -1.211 -3.644 -0.023 -1.215 -1.166 -1.792 -1.267 -1.148 -1.869 respectively (to 3 d.p.)
 ```
+
+```{r}
+#Testing making a function to find density of normal gamma variable to see if the structure of my function matches
+
+calcGamma <- function(x,alpha,beta){
+  num <- (beta^alpha)*(x^(alpha-1))*exp(-beta*x)
+  denom <- gamma(alpha)
+  output <- num/denom
+  return(output)
+}
+
+calcGamma(3,2,5)
+
+dgamma(c(2,3,4),2,5)
+#Note that density returns a vector of values if x is a vector
+```
+
 
 
 ## Question 3: Reimann Integration
 
 ```{r}
 smoothCurve <- function(x,alpha,beta,p,q,k){
+  #To calculate g(x) I split up the term to allow easier manual checking of values and reduce errors due to missing a bracket
   
-  #calculating numerator and denomoinator in log term of g(x) function
+  #calculating numerator and denominator in log term of g(x) function
   numerator <- (gamma(x+beta)^k)*(p^alpha)*(q^beta)
   denominator <- (gamma(alpha)^k)*(gamma(beta)^k)
   
@@ -195,10 +215,15 @@ calcMidRiemannLoop <- function(xVec,alpha,beta,p,q,k){
   interval.area<-rep(0,length(xVec)-1)
   
   #loop to calculate the area in each interval
+  #As we are told that the x intercept is not crossed in any interval we do not need to worry about 
+  #having to split the area into 2 and calculating the area seperately for part above and below x-axis
+  
   for (i in 2:length(xVec)){
+    #Caclulating x input for g(x) function
     x <- (xVec[i]+xVec[i-1])/2
-    #using equation 6 with absoulte value as area cannot be negative
-    interval.area <- abs((xVec[i]-xVec[i-1])*smoothCurve(x,alpha,beta,p,q,k))
+    
+    #using equation 6 with absolute value as area cannot be negative
+    interval.area[i-1] <- abs((xVec[i]-xVec[i-1])*smoothCurve(x,alpha,beta,p,q,k))
   }
   
   #Calculating total area
@@ -207,6 +232,49 @@ calcMidRiemannLoop <- function(xVec,alpha,beta,p,q,k){
   return(approx.area)
 }
 
+calcMidRiemann <- function(xVec,alpha,beta,p,q,k){
+  #Checking xVec argument
+  if (is.numeric(xVec)==F){
+    
+    stop("xVec argument must be numeric")
+    
+  }else if (length(xVec)==1){
+    
+    stop("xvec argument must be a vector of 2 or more values")
+  }
+  #checking to see if all values in xVec are larger than the last (strictly increasing)
+  ifelse(xVec != sort(xVec),stop("xVec argment must be a strictly increasing vector of values"),NA)
 
+  #vector containing the intervals to calculate the area of
+  interval.region<-xVec[-1]-xVec[1:length(xVec)-1]
+  
+  #values of x to input into g(x) for each of the corresponding intervals
+  g.func.input <-(xVec[-1]+xVec[1:length(xVec)-1])/2
+  
+  #calculating each intervals approximate area using equation (6) without summation
+  interval.area <- abs(interval.region*smoothCurve(g.func.input,alpha,beta,p,q,k))
+  #summing individual areas to find total area 
+  approx.area <- sum(interval.area)
+  
+  return(approx.area)
+}
+
+#Creating vector of intervals as specified
+xVec <- seq(from=2,to=8,by=0.01)
+
+
+calcMidRiemannLoop(xVec,2.1,0.5,3,6,2)
+calcMidRiemann(xVec,2.1,0.5,3,6,2)
+
+plot(xVec,smoothCurve(xVec,2.1,0.5,3,6,2))
+
+#Finish checking the other argments!
+
+# #Testing
+# library(DescTools)
+# AUC(xVec,smoothCurve(xVec,2.1,0.5,3,6,2),absolutearea=TRUE)
+# 
+# xVec <- c(2,4,5,-2,1,7)
+# ifelse(xVec != sort(xVec),stop("xVec argment must be a strictly increasing vector of values"),NA)
 ```
 
