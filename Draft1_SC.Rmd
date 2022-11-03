@@ -158,7 +158,7 @@ calcLogMix2Gamma <- function(x,alpha,beta,p){
   prob.dist<-p*(x^(alpha[1]-1)*exp(-beta[1]*x)*beta[1]^alpha[1])/gamma(alpha[1])+(1-p)*(x^(alpha[2]-1)*exp(-beta[2]*x)*beta[2]^alpha[2])/gamma(alpha[2])
   
   #calculating the log of the joint probability distribution
-  log.prob.dist <- log(prob.dist)
+  log.prob.dist <- log(prod(prob.dist))
   
   return(log.prob.dist)
 }
@@ -173,7 +173,7 @@ p <- 0.35
 #Using calcLogMixGamma function with required inputs and rounding to 3 d.p.
 round(calcLogMix2Gamma(x,alpha,beta,p),3)
 
-#The answer of the log joint pdf of each inputted x value is -0.592 -1.211 -3.644 -0.023 -1.215 -1.166 -1.792 -1.267 -1.148 -1.869 respectively (to 3 d.p.)
+#The answer of the log joint pdf is -13.928 (to 3 d.p.)
 ```
 
 ```{r}
@@ -189,7 +189,7 @@ calcGamma <- function(x,alpha,beta){
 calcGamma(3,2,5)
 
 dgamma(c(2,3,4),2,5)
-#Note that density returns a vector of values if x is a vector
+#Note that density returns a vector of values if x is a vector (because not joint pdf)
 ```
 
 
@@ -406,6 +406,8 @@ round(weatherColourProbs(colourSeq,emitProbs,weatherSeq,trProbs,initProbs),3)
 #Need to make comments and clean up code (indentation)
 #Check that have not repeated code in last function???
 #Change if else to have vector of 1 longer length with new 1st element equal to old 1st element (then for loop would do all of the work)
+
+#Need to put into normal R script
 ```
 
 
