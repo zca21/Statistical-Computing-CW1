@@ -21,13 +21,15 @@ round(quantile(density)[[2]],3)
 round(median(density),3)
 #Median of density is 2.744 (3 d.p.)
 
-#Selecting 3rd quantile
-round(quantile(density)[[4]],3)
-#3rd quantile of density is 4.193 (3 d.p.)
+round(mean(density),3)
+#Mean of density is 3.103 (3 d.p.)
 
 #Selecting 3rd quantile
 round(quantile(density)[[4]],3)
 #3rd quantile of density is 4.193 (3 d.p.)
+
+round(max(density),3)
+#maximum value of density is 20.497 (3 d.p.)
 
 #ii
 table(habitat)
