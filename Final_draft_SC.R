@@ -55,7 +55,9 @@ boxplot(logDensity~habitat,
         main="Boxplot of log density in each habitat",
         xlab="Habitat type",
         ylab="Log density",
-        col=c("red","blue","green"))
+        col=c("red","blue","green"),
+        sub="Question 1: part b",
+        cex.sub = 0.7)
 
 dev.off()
 
@@ -129,7 +131,9 @@ sorted.normal.dist<-sort(rnorm(300))
 plot(x=sorted.normal.dist,y=sorted.residuals,
      xlab="Theoretical quantiles",
      ylab="Sample quantiles",
-     main="QQ plot of residuals")
+     main="QQ plot of residuals",
+     sub="Question 1: part e",
+     cex.sub = 0.7)
 #Adding in reference line
 qqline(residuals, col = "red", lwd = 2)
 
