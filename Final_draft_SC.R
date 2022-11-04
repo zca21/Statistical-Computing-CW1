@@ -37,6 +37,7 @@ table(habitat)
 
 #Creating new column in eco-study dataframe which is log of density+1
 eco.df$logDensity <- log(density + 1)
+attach(eco.df)
 
 #Saving plot created below to pdf file called Boxplot.pdf into current directory (set at start up)
 pdf(file="Boxplot.pdf")
