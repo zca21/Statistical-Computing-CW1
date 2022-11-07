@@ -265,10 +265,10 @@ calcMidRiemann <- function(xVec,alpha,beta,p,q,k){
 }
 #e
 #Creating vector of intervals as specified
-xVec <- seq(from=2,to=8,by=0.01)
+xVec <- seq(from=2,to=8.5,by=0.01)
 
 round(calcMidRiemann(xVec,2.1,0.5,3,6,2),3)
-#The approximate area using middle Riemann sum is 4.316 to 3 d.p.
+#The approximate area using middle Riemann sum is 4.737 to 3 d.p.
 
 #f
 calcMidRiemannAreas <- function(xSeqList,alpha,beta,p,q,k){
