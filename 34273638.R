@@ -361,7 +361,7 @@ weatherColourProbs <- function(colourSeq,emitProbs,weatherSeq,trProbs,initProbs)
   
   #calculating log of total probability of observing sequence of weather and jacket colour
   log.total.prob <- log(total.weather.prob*prod(colour.trans.prob))
-
+  
   return(log.total.prob)
 }
 

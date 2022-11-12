@@ -1,0 +1,231 @@
+---
+title: "Untitled"
+output: html_document
+date: "2022-11-12"
+---
+```{r}
+#a
+#Initialising the enviroment
+setwd("~/Desktop/Statistical Computing/CW/Statistical-Computing-CW1")
+eco.df <- read.table("ecoStudy.txt",header = T)
+#Turning habitat variable into factor for later plotting and analysis using it
+eco.df$habitat <- factor(eco.df$habitat,levels=c("A","B","C"),labels=c("A","B","C"))
+attach(eco.df)
+```
+
+
+```{r}
+q1_check <- lm(density~habitat,data=eco.df)
+#f-stat and p-value the same as those calculated
+summary(q1_check)
+plot(q1_check)
+```
+
+```{r}
+testFunc1<- function(x,alpha,beta,p){
+  
+    #checking input arguments are valid 
+  if(is.numeric(x)==F || setequal(x,abs(x))==F){
+    stop("x is not a numeric vector of only positive values")
+    
+  }else if(length(alpha)!=2 || is.numeric(alpha)==F || setequal(alpha,abs(alpha))==F){
+    stop("alpha needs to a numeric vector of length 2 of positive values")
+    
+  }else if(length(beta)!=2 || is.numeric(beta)==F || setequal(beta,abs(beta))==F){
+    stop("beta needs to a numeric vector of length 2 of positive values")
+    
+  }else if(is.numeric(p)==F || length(p)!=1 || p>1 || p<0){
+    stop("p must be a single numeric value between 0 and 1 inclusive")
+  }
+  
+  pdf <- (p*((x^(alpha[1]-1))*exp(-beta[1]*x)*beta[1]^alpha[1])/gamma(alpha[1]))+
+    ((1-p)*(x^(alpha[2]-1)*exp(-beta[2]*x)*beta[2]^alpha[2])/gamma(alpha[2]))
+  
+ joint.log.pdf <- log(prod(pdf))
+ 
+ return(joint.log.pdf)
+}
+
+x <- c(0.06, 2.32, 4.81, 0.02, 2.33, 2.18, 0.83, 2.45, 2.10, 3.27)
+alpha <- c(0.5, 6)
+beta <- c(0.5, 2.5)
+p <- 0.35
+
+round(testFunc1(x,alpha,beta,p),3)
+```
+
+```{r}
+#testing all possible combos 
+
+x<-c("a",3,4)
+testFunc1(x,alpha,beta,p)
+
+x<-c(3,3,4,7,-3,5,6)
+testFunc1(x,alpha,beta,p)
+
+x <- c(0.06, 2.32, 4.81, 0.02, 2.33, 2.18, 0.83, 2.45, 2.10, 3.27)
+
+alpha<-c(3,3,4)
+testFunc1(x,alpha,beta,p)
+
+alpha<-c(3,"a")
+testFunc1(x,alpha,beta,p)
+
+alpha<-c(3,-2)
+testFunc1(x,alpha,beta,p)
+
+alpha <- c(0.5, 6)
+
+beta<-c(3,3,4)
+testFunc1(x,alpha,beta,p)
+
+beta<-c(3,"a")
+testFunc1(x,alpha,beta,p)
+
+beta<-c(3,-2)
+testFunc1(x,alpha,beta,p)
+
+beta <- c(0.5, 2.5)
+
+p<-"a"
+testFunc1(x,alpha,beta,p)
+
+p<-c(1,2)
+testFunc1(x,alpha,beta,p)
+
+p<-1.5
+testFunc1(x,alpha,beta,p)
+
+p<--0.2
+testFunc1(x,alpha,beta,p)
+```
+
+```{r}
+testFunc2 <- function(x,alpha,beta,p,q,k){
+  
+  g <- sin((1/(2*alpha))*log(((gamma(x+beta)^k)*(p^alpha)*(q^beta))/((gamma(alpha)^k)*(gamma(beta)^k))))
+  
+  return(g)
+}
+
+smoothCurve <- function(x,alpha,beta,p,q,k){
+  #To calculate g(x) I split up the term to allow for easier manual 
+  #checking of values and reduce errors due to missing a bracket
+  
+  #calculating numerator and denominator in log term of g(x) function
+  numerator <- (gamma(x+beta)^k)*(p^alpha)*(q^beta)
+  denominator <- (gamma(alpha)^k)*(gamma(beta)^k)
+  
+  #combining parts of g(x) to calculate value of g(x)
+  g <- sin((1/(2*alpha))*log(numerator/denominator))
+  
+  return(g)
+}
+
+
+smoothCurve(2,2.1,0.5,3,6,2)
+testFunc2(2,2.1,0.5,3,6,2)
+
+#same values :)
+```
+
+```{r}
+testFunc3 <- function(xVec,alpha,beta,p,q,k){
+  interval.area <- rep(0,length(xVec-1))
+  
+  for (i in 2:length(xVec)){
+    interval.area[i-1] <- (xVec[i]-xVec[i-1])*abs(testFunc2((xVec[i]+xVec[i-1])/2,alpha,beta,p,q,k))
+  }
+  
+  area.total <- sum(interval.area)
+  return(area.total)
+  
+}
+
+xVec <- seq(from=2,to=8.5,by=0.01)
+
+testFunc3(xVec,2.1,0.5,3,6,2)
+```
+
+```{r}
+xSeqList <- list(seq(from=3.5,to=8,by=0.01),seq(from=2,to=4.3,by=0.1),seq(from=1.07,to=9.012,by=0.001))
+
+testFunc3(seq(from=3.5,to=8,by=0.01),1.9,0.75,2.15,7,1.65)+
+  testFunc3(seq(from=2,to=4.3,by=0.1),1.9,0.75,2.15,7,1.65)+
+  testFunc3(seq(from=1.07,to=9.012,by=0.001),1.9,0.75,2.15,7,1.65)
+```
+
+
+
+```{r}
+#Testing Q4
+testFunc4 <- function(weatherSeq,trProbs,initProbs){
+  
+  transition.prob<- rep(0,length(weatherSeq))
+  
+  if (weatherSeq[1]=="s"){
+    transition.prob[1] <- initProbs[1]
+  }else if (weatherSeq[1]=="c"){
+    transition.prob[1] <- initProbs[2]
+  }else if (weatherSeq[1]=="r"){
+    transition.prob[1] <- initProbs[3]
+  }
+  
+  weatherSeq.num <- ifelse(weatherSeq=="s",1,ifelse(weatherSeq=="c",2,3))
+  
+  
+  for (i in 2:length(weatherSeq)){
+  transition.prob[i] <- trProbs[weatherSeq.num[i-1],weatherSeq.num[i]]
+  }
+  
+  log.prob <- log(prod(transition.prob))
+  return(log.prob)
+}
+
+# s c r
+weatherSeq <- c("c","s","c","r","s","s")
+trProbs <- matrix(c(0.5,0.4,0.1,0.33,0.35,0.32,0.3,0.3,0.4),nrow=3,ncol=3,byrow = T)
+initProbs <- c(0.45,0.25,0.3)
+
+testFunc4(weatherSeq,trProbs,initProbs)
+```
+
+```{r}
+weatherColourProbs <- function(colourSeq,emitProbs,weatherSeq,trProbs,initProbs){
+  #We can rearrange the joint probability to be probability to observe
+  #the sequence of weather multiplied by the probability of our friend choosing a certain
+  #jacket colour given the weather condition for each day
+  
+  #calculate probabilities for weather sequence as before
+  total.weather.prob <- exp(weatherSeqProb(weatherSeq,trProbs,initProbs))
+  
+  #Creating numeric vectors of weather and jacket sequence
+  weatherSeq.numeric <- ifelse(weatherSeq=="s",1,ifelse(weatherSeq=="c",2,3))
+  colourSeq.numeric <- ifelse(colourSeq=="B",1,2)
+  
+  #Creating vector to store the probabilities of selecting the ith jacket colour  
+  #given the ith weather condition in the sequence
+  colour.trans.prob <- rep(0,length(colourSeq))
+  for (i in 1:length(colourSeq)){
+    #Storing prob of selecting the jacket in the ith sequence position for the ith weather condition in the sequence
+    colour.trans.prob[i] <- emitProbs[weatherSeq.numeric[i],colourSeq.numeric[i]]  
+  }
+  
+  #calculating log of total probability of observing sequence of weather and jacket colour
+  log.total.prob <- log(total.weather.prob*prod(colour.trans.prob))
+
+  return(log.total.prob)
+}
+
+weatherSeq <- c("r","s","c")
+colourSeq <- c("B","W","W")
+initProbs <- c(0.35,0.45,0.2)
+trProbs <- matrix(c(0.55,0.25,0.2,0.25,0.35,0.4,0.2,0.15,0.65),nrow=3,ncol=3,byrow = T)
+emitProbs <- matrix(c(0.2,0.8,0.55,0.45,0.9,0.1),nrow=3,ncol=2,byrow = T)
+
+weatherColourProbs(colourSeq,emitProbs,weatherSeq,trProbs,initProbs)
+```
+
+
+
+
